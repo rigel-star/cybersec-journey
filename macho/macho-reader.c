@@ -133,6 +133,11 @@ int main(void) {
     fseek(f, 0, SEEK_SET);
 
     if (magic == FAT_MAGIC || magic == FAT_CIGAM) {
+		/*
+		 As per Wikipedia(https://en.wikipedia.org/wiki/Mach-O#Multi-architecture_binaries):
+		 The magic number in a multi-architecture binary is 0xcafebabe in big-endian byte order, 
+		 so the first four bytes of the header will always be 0xca 0xfe 0xba 0xbe, in that order.
+		*/
         handle_fat(f, magic);
     } 
 	else {
