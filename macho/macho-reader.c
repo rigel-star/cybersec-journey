@@ -111,12 +111,21 @@ static void handle_fat(FILE *f, uint32_t magic) {
     FatArch_t *archs = malloc(sizeof(FatArch_t) * narch);
     fread(archs, sizeof(FatArch_t), narch, f);
 
-    uint32_t offset = maybe_swap(archs[0].offset, swapped);
+	for (uint32_t i = 0; i < narch; i++) {
+		uint32_t offset    = maybe_swap(archs[i].offset, swapped);
+		uint32_t size      = maybe_swap(archs[i].size, swapped);
 
-    printf("Using slice 0 at offset %u\n", offset);
+		printf("\n== Architecture %u ==\n", i);
+		printf("offset:     %u\n", offset);
+		printf("size:       %u\n", size);
 
-    fseek(f, offset, SEEK_SET);
-    read_macho_header(f);
+		long saved = ftell(f);
+		fseek(f, offset, SEEK_SET);
+
+		read_macho_header(f);
+
+		fseek(f, saved, SEEK_SET);
+	}
 
     free(archs);
 }
