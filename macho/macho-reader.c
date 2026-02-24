@@ -104,10 +104,20 @@ static void read_load_commands(FILE *f, uint32_t ncmds, int swapped, int is64) {
 			path[i] = '\0';
 
 			printf("	LINK_LIBRARY_64\n");
-			printf("		stroff: 0x%llx\n", LC_LINK_LIBRARY_STR_OFF);
+			printf("		stroff: 0x%x\n", LC_LINK_LIBRARY_STR_OFF);
 			printf("		path:   %s\n", path);
 
 			fseek(f, saved, SEEK_SET);
+		}
+		else if (is64 && cmd == LC_MAIN) {
+			fseek(f, cmd_start, SEEK_SET);
+
+			EntryPoint_t ep;
+            fread(&ep, sizeof(ep), 1, f);
+
+			printf("	LC_MAIN\n");
+			printf("		entryoff: %x\n", maybe_swap(ep.entryoff, swapped));
+			printf("		stacksize: %x\n", maybe_swap(ep.stacksize, swapped));
 		}
 
         fseek(f, cmd_start + cmdsize, SEEK_SET);

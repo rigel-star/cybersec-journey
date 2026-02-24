@@ -2,6 +2,7 @@
 
 #define LC_SEGMENT_64 		0x19
 #define LC_LINK_LIBRARY_64 	0x0C
+#define LC_MAIN 			0x80000028 /* entry point (64-bit) */
 
 #define LC_LINK_LIBRARY_STR_OFF		0x18 /* Always 24 */
 
@@ -33,3 +34,10 @@ typedef struct LinkLibrary {
 	uint32_t	compat_ver;
 	uint32_t	file_path;
 } LinkLibrary_t;
+
+typedef struct EntryPoint {
+    uint32_t  cmd;
+    uint32_t  cmdsize;
+    uint64_t  entryoff;
+    uint64_t  stacksize;
+} EntryPoint_t;
