@@ -85,6 +85,30 @@ static void read_load_commands(FILE *f, uint32_t ncmds, int swapped, int is64) {
             printf("      filesize:%llu\n",
                    (unsigned long long)maybe_swap(seg.filesize, swapped));
         }
+		else if (is64 && cmd == LC_LINK_LIBRARY_64) {
+			fseek(f, cmd_start, SEEK_SET);
+
+			LinkLibrary_t lib;
+			fread(&lib, sizeof(lib), 1, f);
+
+			long saved = ftell(f);
+			fseek(f, cmd_start + LC_LINK_LIBRARY_STR_OFF, SEEK_SET);
+
+			char path[512];
+			size_t i = 0;
+			int c;
+
+			while (i < sizeof(path) - 1 && (c = fgetc(f)) != EOF && c != '\0') {
+				path[i++] = (char)c;
+			}
+			path[i] = '\0';
+
+			printf("	LINK_LIBRARY_64\n");
+			printf("		stroff: 0x%llx\n", LC_LINK_LIBRARY_STR_OFF);
+			printf("		path:   %s\n", path);
+
+			fseek(f, saved, SEEK_SET);
+		}
 
         fseek(f, cmd_start + cmdsize, SEEK_SET);
     }
