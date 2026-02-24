@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "load_command.h"
+
 #define FAT_MAGIC 			0xCAFEBABE
 #define FAT_CIGAM      		0xBEBAFECA
 #define MH_MAGIC       		0xFEEDFACE
@@ -55,6 +57,39 @@ static uint32_t maybe_swap(uint32_t v, int swapped) {
     return swapped ? bswap32(v) : v;
 }
 
+static void read_load_commands(FILE *f, uint32_t ncmds, int swapped, int is64) {
+    for (uint32_t i = 0; i < ncmds; i++) {
+        long cmd_start = ftell(f);
+
+        LoadCommand_t lc;
+        fread(&lc, sizeof(lc), 1, f);
+
+        uint32_t cmd     = maybe_swap(lc.cmd, swapped);
+        uint32_t cmdsize = maybe_swap(lc.cmdsize, swapped);
+
+        printf("  LoadCmd %u: cmd=0x%x size=%u\n", i, cmd, cmdsize);
+
+        if (is64 && cmd == LC_SEGMENT_64) {
+            fseek(f, cmd_start, SEEK_SET);
+
+            SegmentCommand64_t seg;
+            fread(&seg, sizeof(seg), 1, f);
+
+            printf("    SEGMENT_64: %.16s\n", seg.segname);
+            printf("      vmaddr:  0x%llx\n",
+                   (unsigned long long)maybe_swap(seg.vmaddr, swapped));
+            printf("      vmsize:  0x%llx\n",
+                   (unsigned long long)maybe_swap(seg.vmsize, swapped));
+            printf("      fileoff: %llu\n",
+                   (unsigned long long)maybe_swap(seg.fileoff, swapped));
+            printf("      filesize:%llu\n",
+                   (unsigned long long)maybe_swap(seg.filesize, swapped));
+        }
+
+        fseek(f, cmd_start + cmdsize, SEEK_SET);
+    }
+}
+
 static void read_macho_header(FILE* f) {
 	uint32_t magic;
     fread(&magic, 4, 1, f);
@@ -84,6 +119,9 @@ static void read_macho_header(FILE* f) {
         printf("ncmds:      %u\n",   maybe_swap(h.ncmds, swapped));
         printf("sizeofcmds: %u\n",   maybe_swap(h.sizeofcmds, swapped));
         printf("flags:      0x%x\n", maybe_swap(h.flags, swapped));
+
+		uint32_t ncmds = maybe_swap(h.ncmds, swapped);
+		read_load_commands(f, ncmds, swapped, 1);
     } else {
         MachHeader32_t h;
         fread(&h, sizeof(h), 1, f);
@@ -95,6 +133,9 @@ static void read_macho_header(FILE* f) {
         printf("ncmds:      %u\n",   maybe_swap(h.ncmds, swapped));
         printf("sizeofcmds: %u\n",   maybe_swap(h.sizeofcmds, swapped));
         printf("flags:      0x%x\n", maybe_swap(h.flags, swapped));
+
+		uint32_t ncmds = maybe_swap(h.ncmds, swapped);
+		read_load_commands(f, ncmds, swapped, 0);
     }
 }
 
