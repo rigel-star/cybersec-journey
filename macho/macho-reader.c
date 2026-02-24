@@ -130,8 +130,16 @@ static void handle_fat(FILE *f, uint32_t magic) {
     free(archs);
 }
 
-int main(void) {
-    FILE *f = fopen("/bin/ls", "rb");
+int main(int argc, char** argv) {
+	if (argc < 2) {
+		printf("Usage: ./main [mach-o file's path]\n");
+		return 0;
+	}
+
+	char* bin_path = argv[1];
+	printf("=== Reading %s ===\n\n", bin_path);
+
+    FILE *f = fopen(bin_path, "rb");
     if (!f) {
         perror("open");
         return 1;
