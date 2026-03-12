@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdint.h>
 
 struct mem_block_hdr {
     size_t 						size;
@@ -88,7 +89,12 @@ void arena_free(void* ptr) {
   	}
 
   	struct mem_block_hdr* block_ptr = get_block_ptr(ptr);
-  	assert(block_ptr->is_free == 0);
+  	
+	if (block_ptr->is_free == 1) {
+		fprintf(stderr, "fatal: double-free detected\n");
+		exit(-1);
+	}
+
   	assert(block_ptr->canary == 0x77777777 || block_ptr->canary == 0x12345678);
 
   	block_ptr->is_free = 1;
@@ -110,6 +116,7 @@ int main(void) {
 	printf("%d\n", *(items + 1));
 	printf("%d\n", *(items + 2));
 
+	arena_free(items);
 	arena_free(items);
 	return 0;
 }
