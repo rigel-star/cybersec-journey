@@ -1,0 +1,1 @@
+## A simple FIFO(named pipe) example demonstrating IPC
