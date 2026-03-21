@@ -102,7 +102,9 @@ void arena_free(void* ptr) {
 }
 
 int main(void) {
-	uint32_t* items = arena_alloc(sizeof(uint32_t) * 100);
+	uint32_t* items = arena_alloc(sizeof(uint32_t) * 5);
+	uint32_t* items2 = arena_alloc(sizeof(uint32_t) * 5);
+
 	if (!items) {
 		fprintf(stderr, "arena_alloc failed");
 		return -1;
@@ -116,7 +118,9 @@ int main(void) {
 	printf("%d\n", *(items + 1));
 	printf("%d\n", *(items + 2));
 
-	arena_free(items);
-	arena_free(items);
+	arena_free(items2);
+	*(items + 4 + sizeof(size_t)) = 0;
+	arena_free(items2);
+
 	return 0;
 }
